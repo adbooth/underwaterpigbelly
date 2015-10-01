@@ -3,9 +3,11 @@
 
 from flask import Flask
 from flask_socketio import SocketIO
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-socketio = SocketIO(app)
 app.debug = True
+socketio = SocketIO(app)
+db = SQLAlchemy(app)
 
-import game.views, game.comm
+from game import comm, views
