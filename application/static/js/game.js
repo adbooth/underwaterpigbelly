@@ -9,6 +9,10 @@ Crafty.e('2D, DOM, Color, Fourway')
     });
 
 socket.on('location_info', function(info){
-    var console = document.getElementById('console');
-    console.innerHTML = 'x: ' + info.x + '   y: ' + info.y;
+    // $('#x').text(info.x);
+    // $('#y').text(info.y);
+    var xtag = document.getElementById('x');
+    var ytag = document.getElementById('y');
+    xtag.innerHTML = 'x: ' + info.x;
+    ytag.innerHTML = 'y: ' + info.y;
 });
