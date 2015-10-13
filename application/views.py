@@ -1,41 +1,47 @@
 """ application/views.py
 """
 
-from application import app, game
 from flask import render_template, redirect, url_for, request, session
+
+from application import app, game
+from Forms import StartForm
 
 @app.route('/')
 def index():
     """
-    Redirects user to 'play' URL
-    Will probably use this later on to check the user's cookies and redirect to
-    a login or setup page.
+    Root of web application
+    Decides where to route user depending on cookies
     """
+    # session.permanent = True
+    # session.permanent_session_lifetime = True
+    # if 'hascookie' in session and session['hascookie']:
+    #     return redirect(url_for('play'))
+    #
+    # session['hascookie'] = False
     return redirect(url_for('start'))
-
-@app.route('/play')
-def play():
-    """Renders game view for user"""
-    username = session['username']
-    return render_template('play.html', username=username)
-
-@app.route('/login')
-def login():
-    """Renders login view for user"""
-    return render_template('login.html')
 
 @app.route('/start', methods=['POST', 'GET'])
 def start():
     """Renders start view for user"""
-    error = ''
-    if request.method == 'POST':
-        # It's a form submission
-        form = request.form
-        if not game.addplayer(form['username']):
-            error = 'Username ' + form['username'] + ' already exists'
-
-        if not error:
-            session['username'] = form['username']
+    form = StartForm()
+    if form.validate_on_submit():
+        username = request.form['username']
+        try:
+            game.addplayer(username)
+        except ValueError:
+            form.username.errors.append('Username taken. Really, be more original')
+        else:
+            session['username'] = username
             return redirect(url_for('play'))
 
-    return render_template('start.html', error=error)
+    return render_template('start.html', form=form)
+
+@app.route('/play')
+def play():
+    """Renders game view for user"""
+    return render_template('play.html')
+
+# @app.route('/login')
+# def login():
+#     """Renders login view for user"""
+#     return render_template('login.html')
