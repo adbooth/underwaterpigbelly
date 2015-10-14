@@ -1,6 +1,8 @@
 """ application/views.py
 """
 
+# import string, random
+
 from flask import render_template, redirect, url_for, request, session
 
 from application import app, game
@@ -12,12 +14,20 @@ def index():
     Root of web application
     Decides where to route user depending on cookies
     """
-    # session.permanent = True
-    # session.permanent_session_lifetime = True
-    # if 'hascookie' in session and session['hascookie']:
-    #     return redirect(url_for('play'))
+    # try:
+    #     previoususer = request.cookies['previoususer']
+    # except KeyError:
+    #     # Make new remember cookie and store it on client
+    # clientid = ''
+    # while True:
+    #     clientid = ''.join(random.SystemRandom().choice(string.ascii_letters) for _ in xrange(32))
+    #     if not game.clientidexists(clientid):
+    #         game.addclient(clientid, '')
+    #         break
     #
-    # session['hascookie'] = False
+    # response = make_response(redirect(url_for('start')))
+    # response.set_cookie('clientid', clientid)
+    # return response
     return redirect(url_for('start'))
 
 @app.route('/start', methods=['POST', 'GET'])
@@ -36,9 +46,11 @@ def start():
 
     return render_template('start.html', form=form)
 
-@app.route('/play')
+@app.route('/play', methods=['POST', 'GET'])
 def play():
     """Renders game view for user"""
+    if request.method == 'POST':
+        return session['username']
     return render_template('play.html')
 
 # @app.route('/login')

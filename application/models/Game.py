@@ -9,9 +9,18 @@ class Game(object):
     def __init__(self):
         self.playerlist = {}
         # self.userlist = {}
+        # self.clientlist = {}
+
+    # def clientidexists(self, clientid):
+    #     return clientid in self.clientlist
+    #
+    # def addclient(self, clientid, username):
+    #     self.clientlist[clientid] = username
+    #
+    # def removeclient(self, clientid):
+    #     self.clientlist.pop(clientid)
 
     def addplayer(self, username):
-        """Adds new player to game"""
         # if not self.userexists(username):
         #     raise KeyError('User not yet added to userlist')
         if self.userisplaying(username):
@@ -21,7 +30,6 @@ class Game(object):
         self.playerlist[player.username] = player
 
     def removeplayer(self, username):
-        """Removes player from game"""
         if not self.userisplaying(username):
             return False
 

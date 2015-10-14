@@ -1,18 +1,35 @@
 Crafty.init(window.innerWidth, window.innerHeight, document.getElementById('game'));
 
-var player = Crafty.e('2D, DOM, Color, Fourway')
-    .attr({x: 0, y: 0, w: 100, h: 100})
-    .color('#F00')
-    .fourway(5)
-    .bind('EnterFrame', function(eventData){
-        socket.emit('player_location', {'x': this.x, 'y': this.y});
+Crafty.c('Player', {
+    init: function(){
+        this.addComponent('2D, DOM, Color, Fourway');
+        this.x = 0;
+        this.y = 0;
+        this.w = 50;
+        this.h = 50;
+        this.color('#F00');
+    }
+});
+
+var playerlist;
+socketio.on('game update', function(message){
+    player_data = message;
+});
+
+Crafty.bind('EnterFrame', function(){
+
+});
+
+var player = Crafty.e('Player');
+player.fourway(5);
+player.bind('EnterFrame', function(){
+    socketio.emit('location update', {
+        'username': username,
+        'x': this.x,
+        'y': this.y
     });
+});
 
-function addPlayer(){
-    
-}
-
-// socket.on('location_info', function(info){
-//     var xtag = document.getElementById('x').innerHTML = 'x: ' + info.x;
-//     var ytag = document.getElementById('y').innerHTML = 'y: ' + info.y;
-// });
+$(window).unload(function(){
+    socketio.emit('game close', {'username': username});
+});
