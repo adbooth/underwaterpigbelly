@@ -12,22 +12,8 @@ from Forms import StartForm
 def index():
     """
     Root of web application
-    Decides where to route user depending on cookies
+    Will someday decide where to route user depending on cookies
     """
-    # try:
-    #     previoususer = request.cookies['previoususer']
-    # except KeyError:
-    #     # Make new remember cookie and store it on client
-    # clientid = ''
-    # while True:
-    #     clientid = ''.join(random.SystemRandom().choice(string.ascii_letters) for _ in xrange(32))
-    #     if not game.clientidexists(clientid):
-    #         game.addclient(clientid, '')
-    #         break
-    #
-    # response = make_response(redirect(url_for('start')))
-    # response.set_cookie('clientid', clientid)
-    # return response
     return redirect(url_for('start'))
 
 @app.route('/start', methods=['POST', 'GET'])
@@ -44,18 +30,21 @@ def start():
             session['username'] = username
             return redirect(url_for('play'))
 
-    # Render start template on GET or form fail
     return render_template('start.html', form=form)
 
 @app.route('/play', methods=['POST', 'GET'])
 def play():
     """Renders game view for user, as well as handles AJAX call for initial player data"""
     if request.method == 'POST':
-        socket.emit('player added', {'username': session['username'], 'x': game.getplayer(session['username']).x, 'y': game.getplayer(session['username']).y})
-        return json.dumps({'username': session['username'], 'x': game.getplayer(session['username']).x, 'y': game.getplayer(session['username']).y})
-    return render_template('play.html')
+        # Send message to all clients saying player added
+        player = game.getplayer(session['username'])
+        socket.emit('PLAYER_ADDED', player.__dict__)
 
-# @app.route('/login')
-# def login():
-#     """Renders login view for user"""
-#     return render_template('login.html')
+        # Send new client initial data
+        return json.dumps({
+            'username': player.username,
+            'player_data': player.dumps(),
+            'enemy_data': game.dumps()
+        })
+
+    return render_template('play.html')
