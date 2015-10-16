@@ -11,7 +11,7 @@ from models.Game import Game
 app = Flask(__name__)
 app.debug = True
 app.secret_key = urandom(24)
-socketio = SocketIO(app)
+socket = SocketIO(app)
 
 game = Game()
 

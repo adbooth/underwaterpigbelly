@@ -7,5 +7,5 @@ class Player(object):
     def __init__(self, game, username):
         game = game
         self.username = username
-        self.x = 0
-        self.y = 0
+        self.x = 50
+        self.y = 50

@@ -1,39 +1,40 @@
 """ application/comm.py
 """
 
-from application import game, socketio
+from application import game, socket
 
-# @socketio.on('handshake_from_client')
-# def handshake(request):
-#     """Handshake pattern I've noticed is necessary in establishing connection"""
-#     if request['key'] == 'initial':
-#         socketio.emit('handshake_to_client', {'key': 'shake'})
+@socket.on('handshake from client')
+def handshake_to_client(request):
+    if request['key'] == 'hand':
+        socket.emit('handshake to client', {'key': 'shake'})
 
-# @socketio.on('player_location')
-# def locationupdate(message):
-#     """Docstring LOL"""
-#     info = {
-#         'x': message['x'],
-#         'y': message['y']
-#     }
-#     socketio.emit('location_info', info)
+# @socket.on('initial player data request')
+# def initial_player_response(request):
+#     initial_player_data_response = {}
+#     initial_player_data_response['x'] = game.getplayer(request['username']).x
+#     initial_player_data_response['y'] = game.getplayer(request['username']).y
+#     socket.emit('initial player data response', initial_player_data_response)
 
-@socketio.on('location update')
-def location_update(message):
-    game.playerlist[message['username']].x = message['x']
-    game.playerlist[message['username']].y = message['y']
+@socket.on('location update')
+def location_update(update):
+    """Gets location data from a client, responds with most recent game data"""
+    # Store new location data
+    game.playerlist[update['username']].x = update['x']
+    game.playerlist[update['username']].y = update['y']
 
+    # Prepare game data object for response
     game_update = {}
-    for name, player in game.playerlist:
+    for name, player in game.playerlist.iteritems():
         game_update[name] = {}
         game_update[name]['x'] = player.x
         game_update[name]['y'] = player.y
 
-    socketio.emit('game update', game_update)
+    # Respond with game update
+    socket.emit('game update', game_update)
 
-
-@socketio.on('game close')
-def game_close(message):
-    if message['closed']:
-        game.removeplayer(message['username'])
-        game.removeclient(message['username'])
+# @socket.on('game close')
+# def game_close(message):
+#     """Removes player from player data structures on game close"""
+#     if message['closed']:
+#         game.removeplayer(message['username'])
+#         # game.removeclient(message['username'])

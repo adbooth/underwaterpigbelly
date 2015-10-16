@@ -21,6 +21,7 @@ class Game(object):
     #     self.clientlist.pop(clientid)
 
     def addplayer(self, username):
+        """Adds player to playerlist"""
         # if not self.userexists(username):
         #     raise KeyError('User not yet added to userlist')
         if self.userisplaying(username):
@@ -30,11 +31,16 @@ class Game(object):
         self.playerlist[player.username] = player
 
     def removeplayer(self, username):
+        """Removes player from playerlist"""
         if not self.userisplaying(username):
             return False
 
         self.playerlist.pop(username)
         return True
+
+    def getplayer(self, username):
+        """docstring here"""
+        return self.playerlist[username]
 
     # def userexists(self, username):
     #     """Returns true if username is part of list"""

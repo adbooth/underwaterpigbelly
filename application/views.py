@@ -3,9 +3,9 @@
 
 # import string, random
 
-from flask import render_template, redirect, url_for, request, session
+from flask import render_template, redirect, url_for, request, session, json
 
-from application import app, game
+from application import app, game, socket
 from Forms import StartForm
 
 @app.route('/')
@@ -44,13 +44,15 @@ def start():
             session['username'] = username
             return redirect(url_for('play'))
 
+    # Render start template on GET or form fail
     return render_template('start.html', form=form)
 
 @app.route('/play', methods=['POST', 'GET'])
 def play():
-    """Renders game view for user"""
+    """Renders game view for user, as well as handles AJAX call for initial player data"""
     if request.method == 'POST':
-        return session['username']
+        socket.emit('player added', {'username': session['username'], 'x': game.getplayer(session['username']).x, 'y': game.getplayer(session['username']).y})
+        return json.dumps({'username': session['username'], 'x': game.getplayer(session['username']).x, 'y': game.getplayer(session['username']).y})
     return render_template('play.html')
 
 # @app.route('/login')
