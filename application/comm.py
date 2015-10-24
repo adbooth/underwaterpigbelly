@@ -7,7 +7,8 @@ from application import game, socket
 def handshake_to_client(request):
     """Handshake pattern I've noticed is necessary to open connection"""
     if request['payload'] == 'hand':
-        socket.emit('HANDSHAKE_TO_CLIENT', {
+        socket.emit('SERVER_MESSAGE', {
+            'command': 'HANDSHAKE_TO_CLIENT',
             'username': request['username'],
             'payload': 'shake'
         })
@@ -16,15 +17,19 @@ def handshake_to_client(request):
 def game_udpate(update):
     """Gets location data from a client, responds with most recent game data"""
     # Store new location data
-    game.updateplayer(update['username'], update['x'], update['y'])
+    game.updatePlayer(update['username'], update['x'], update['y'])
     # Respond with game update
-    socket.emit('GAME_UPDATE', {
+    socket.emit('SERVER_MESSAGE', {
+        'command': 'GAME_UPDATE',
         'username': update['username'],
-        'payload': game.dumps()
+        'payload': game.dictify()
     })
 
 @socket.on('GAME_CLOSE')
 def game_close(message):
     """Removes player from playerlist on game close"""
-    socket.emit('PLAYER_REMOVED', {'username': message['username']})
-    game.removeplayer(message['username'])
+    socket.emit('SERVER_MESSAGE', {
+        'command': 'PLAYER_REMOVED',
+        'payload': message.username
+    })
+    game.removePlayer(message['username'])

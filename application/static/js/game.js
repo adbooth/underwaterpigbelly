@@ -1,50 +1,46 @@
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
-console.log(initial_data);
-var username = initial_data.username;
-
 function preload() {
     game.load.image('blue-circle', '/static/assets/circle-32.ico');
     game.load.image('red-circle', '/static/assets/circle-32.gif');
 }
 
 var protagonist;
-var enemies;
+var playergroup;
+var players;
 var cursors;
 
 function create() {
     // Some sort of necessary physics engine
     game.physics.startSystem(Phaser.Physics.ARCADE);
-
-    // Protagonist creation
-    initial_player_data = initial_data.player_data;
-    protagonist = game.add.sprite(initial_player_data.x, initial_player_data.y, 'blue-circle');
-    protagonist.name = username;
-    game.physics.arcade.enable(protagonist);
-    protagonist.body.collideWorldBounds = true;
-
     // I/O creation
     cursors = game.input.keyboard.createCursorKeys();
 
-    // Other player data structure
-    enemies = game.add.group();
-    enemies.enableBody = true;
+    // Protagonist creation
+    protagonist = game.add.sprite(initial_player_data.x, initial_player_data.y, 'blue-circle');
+    protagonist.name = client_username;
+    game.physics.arcade.enable(protagonist);
+    protagonist.body.collideWorldBounds = true;
 
-    var playerlist = initial_data.enemy_data.playerlist;
-    for(var enemy_username in playerlist){
-        if(enemy_username == username){
+    // Other player data
+    players = {};
+    playergroup = game.add.group();
+    playergroup.enableBody = true;
+    var playerdict = initial_game_data.playerdict;
+    for(var username in playerdict){
+        if(username == client_username){
             continue;
         }
-        if(playerlist.hasOwnProperty(enemy_username)){
-            console.log(playerlist[enemy_username]);
-            // var enemy = enemies.create(playerlist[enemy_username].x, playerlist[enemy_username].y, 'red-circle');
-            // enemy.name = playerlist[enemy_username].username;
+        if(playerdict.hasOwnProperty(username)){
+            var player = playergroup.create(playerdict[username].x, playerdict[username].y, 'red-circle');
+            player.name = username;
+            players[username] = player;
         }
     }
 }
 
 function update() {
-    game.physics.arcade.collide(protagonist, enemies);
+    game.physics.arcade.collide(protagonist, playergroup);
 
     // Moves protagonist based on input
     protagonist.body.velocity.x = 0;
@@ -63,41 +59,58 @@ function update() {
     }
 
     socket.emit('LOCATION_UPDATE', {
-        'username': username,
+        'username': client_username,
         'x': protagonist.x,
         'y': protagonist.y
     });
+
+    for(var player in players){
+        console.log(player);
+    //     console.log('x: ' + player.x + '     y: ' + player.y);
+    // }
 }
 
-function getEnemyByName(username){
-    enemies.forEach(function(enemy){
-        if(enemy.name == username){
-            return enemy;
+dispatch = {
+    'HANDSHAKE_TO_CLIENT': function(payload){
+        if(payload == 'shake'){
+            console.log('Connection confirmed.');
         }
-    });
-}
+    },
+    'PLAYER_ADDED': function(payload){
+        player = playergroup.create(payload.x, payload.y, 'red-circle');
+        player.name = payload.username;
+        players[payload.username] = player;
+        console.log(payload.username + ' has joined the game.');
+    },
+    'PLAYER_REMOVED': function(payload){
+        player = players[payload];
+        playergroup.remove(player);
+        var index = $.inArray(player, players);
+        if(index > -1){
+            players = players.splice(index, 1);
+        }
+        console.log(payload + ' has left the game.');
+    },
+    'GAME_UPDATE': function(payload){
+        var playerdict = payload.playerdict;
+        for(var username in players){
+            players[username].x = playerdict[username].x;
+            players[username].y = playerdict[username].y;
+        }
+    }
+};
 
-socket.on('PLAYER_ADDED', function(player){
-    enemy = enemies.create(player.x, player.y, 'red-circle');
-    enemy.name = player.username;
-});
+var broadcastCommands = [
+    'PLAYER_ADDED',
+    'PLAYER_REMOVED',
+];
 
-socket.on('PLAYER_REMOVED', function(username){
-    enemy = getEnemyByName(username);
-    enemies.remove(enemy);
-});
-
-socket.on('GAME_UPDATE', function(message){
-    if(message.username != username){
+socket.on('SERVER_MESSAGE', function(message){
+    command = message.command;
+    if($.inArray(command, broadcastCommands) < 0 && message.username != client_username){
         return;
     }
-    var payload = JSON.parse(message.payload);
-    var playerlist = payload.playerlist;
-
-    enemies.forEach(function(enemy){
-        enemy.x = playerlist[enemy.name].x;
-        enemy.y = playerlist[enemy.name].y;
-    }, this);
+    dispatch[command](message.payload);
 });
 
 $(window).unload(function(){

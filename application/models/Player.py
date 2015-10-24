@@ -13,7 +13,7 @@ class Player(object):
         self.y = y
 
     @staticmethod
-    def dictload(game, data):
+    def dictLoad(game, data):
         """Creates Player instance out of dictionary"""
         player = Player(game, data['username'])
         player.x = data['x']
@@ -32,4 +32,4 @@ class Player(object):
     def loads(game, string):
         """Creates Player instance out of JSON string"""
         data = json.loads(string)
-        return Player.dictload(game, data)
+        return Player.dictLoad(game, data)
